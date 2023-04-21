@@ -4,8 +4,9 @@ import requests
 from flask import Flask, request
 from flask_cors import CORS
 from dotenv import load_dotenv
-from utility.adam import grad_descent
 
+import utility.thingspeak as thingspeak
+from utility.adam import grad_descent
 from utility.constants import grid_prices
 from utility.cost_utils import overall_price_function
 from weather.temperature import get_temperature_values
@@ -43,14 +44,19 @@ def createApp(testing: bool = True):
         if not response:
             return {"400": "Bad Request"}
         alpha = response['alpha']
-        Tmin = response['Tmin']
-        Tset = response['Tset']
-        Tmax = response['Tmax']
+        Tmin = response['tmin']
+        Tset = response['tset']
+        Tmax = response['tmax']
         external_temperatures = get_temperature_values()
         room_temperatures = grad_descent(alpha, external_temperatures, Tmin, Tset, Tmax)
-        things_speak_url = ""
         # hit the thingsSpeak API every 15 minutes
         for current_temperature in room_temperatures:
-            requests.get()
-            sleep(15 * 60)
+            thing_speak_api_url = f"api.thingspeak.com/update?api_key=DXAHHTGT4Y0XL1GE&field3={Tmax}&field4={Tmin}&field5={Tset}&field6={current_temperature}"
+            thingspeak.request(thing_speak_api_url)
+            sleep(15)
+        return {"200": "Success"}
     return app
+
+if __name__ == '__main__':
+    app = createApp(testing=True)
+    app.run()
