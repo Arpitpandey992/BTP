@@ -6,6 +6,7 @@ from weather.temperature import get_temperature_values
 
 
 def grad_descent(alpha, external_temperatures, Tmin, Tset, Tmax):
+    print(f'Adam Called, alpha - {alpha}')
     # Define the variables to optimize
     x = [28] * 96
     # print(x)

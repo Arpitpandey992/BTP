@@ -1,5 +1,9 @@
+import os
 from time import sleep
 import requests
+
+api_key = os.environ['API_KEY_THINGSPEAK']
+sleep_time = 15 * 60
 
 
 def request(url: str):
@@ -12,5 +16,5 @@ def request(url: str):
             sleep(1)
         else:
             break
-
+    print(f'Thingspeak API called - {url}')
     return response
