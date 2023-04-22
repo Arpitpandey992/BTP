@@ -17,6 +17,7 @@ def createApp(testing: bool = True):
     app = Flask(__name__)
     CORS(app)
     alphas = np.linspace(0, 1, 11)
+    alphas[-1] = 0.99
 
     # Routes
     @app.route('/adam', methods=['GET'])

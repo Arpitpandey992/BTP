@@ -14,7 +14,3 @@ def get_temperature_values(city: str = DEFAULT_CITY) -> list[float]:
             weather_values[i + 72]['temperature'],
         ])
     return temperature_values
-
-
-if __name__ == '__main__':
-    get_temperature_values()
