@@ -1,7 +1,8 @@
 from time import sleep
 import numpy as np
-from flask import Flask, request, abort
+from flask import Flask, request, abort, jsonify
 from flask_cors import CORS
+import threading
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -54,20 +55,30 @@ def createApp(testing: bool = True):
             print(f"Exception in select alpha -> {e}")
             abort(400, f'{e} Key missing')
         print(f"POST select alpha - alpha:{alpha}, Tmin:{Tmin}, Tset:{Tset}, Tmax:{Tmax}")
+
         print("Getting external temperatures")
         external_temperatures = get_temperature_values()
-        room_temperatures = grad_descent(alpha, external_temperatures, Tmin, Tset, Tmax)
+        room_temperatures = grad_descent(alpha, external_temperatures, Tmin, Tset, Tmax).tolist()
 
-        # update the thingsSpeak dashboard every 15 minutes
-        for current_temperature in room_temperatures:
-            thingspeak_api_url = f"https://api.thingspeak.com/update?api_key={thingspeak.api_key}&field3={Tmax}&field4={Tmin}&field5={Tset}&field6={current_temperature}"
-            thingspeak.request(thingspeak_api_url)
-            print(f"Updated thingspeak dashboard - Tmin:{Tmin}, Tset:{Tset}, Tmax:{Tmax}, Tcur:{current_temperature}")
-            sleep(thingspeak.sleep_time)
-        return "success", 200
+        def async_select_alpha():
+            # update the thingsSpeak dashboard every 15 minutes
+            for current_temperature in room_temperatures:
+                thingspeak_api_url = f"https://api.thingspeak.com/update?api_key={thingspeak.api_key}&field3={Tmax}&field4={Tmin}&field5={Tset}&field6={current_temperature}"
+                thingspeak.request(thingspeak_api_url)
+                print(f"Updated thingspeak dashboard - Tmin:{Tmin}, Tset:{Tset}, Tmax:{Tmax}, Tcur:{current_temperature}")
+                sleep(thingspeak.sleep_time)
+
+        threading.Thread(target=async_select_alpha).start()
+        return {
+            'status': 200,
+            'message': f'started updating thingspeak dashboard every {thingspeak.sleep_time} seconds',
+            'external_temperatures': external_temperatures,
+            'room_temperatures': room_temperatures
+        }
+
     return app
 
 
 if __name__ == '__main__':
     app = createApp(testing=True)
-    app.run(debug=True)
+    app.run(debug=True, port=8000)
