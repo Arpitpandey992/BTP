@@ -16,5 +16,4 @@ def request(url: str):
             sleep(1)
         else:
             break
-    print(f'Thingspeak API called - {url}')
     return response
