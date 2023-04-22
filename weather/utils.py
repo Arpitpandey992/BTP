@@ -1,5 +1,10 @@
 import os
 import requests
+import datetime
+
+
+def unix_time_to_datetime(unix_time):
+    return datetime.datetime.fromtimestamp(unix_time).strftime('%Y-%m-%d %H:%M:%S')
 
 
 def get_latiture_longitude(city: str) -> tuple[float, float]:
@@ -15,8 +20,10 @@ def get_weather_values(city: str) -> list:
     url = f"https://api.pirateweather.net/forecast/{api_key_pirate}/{lat},{lon}?extend=hourly&exclude=minutely,daily,currently,alerts&units=si"
     response = requests.get(url)
     response = response.json()
-    return [resp for resp in response['hourly']['data'][:96]]
-
+    ans = [resp for resp in response['hourly']['data'][:96]]
+    for cur in ans:
+        cur['time'] = unix_time_to_datetime(cur['time'])
+    return ans
 
 if __name__ == '__main__':
     print(get_weather_values('Roorkee'))
