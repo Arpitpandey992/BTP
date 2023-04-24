@@ -3,7 +3,7 @@ from time import sleep
 import requests
 
 api_key = os.environ['API_KEY_THINGSPEAK']
-sleep_time = 1 * 60
+sleep_time = 1 * 17
 
 
 def request(url: str):

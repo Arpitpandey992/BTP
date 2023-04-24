@@ -55,19 +55,22 @@ def createApp(testing: bool = True):
             print(f"Exception in select alpha -> {e}")
             abort(400, f'{e} Key missing')
         print(f"POST select alpha - alpha:{alpha}, Tmin:{Tmin}, Tset:{Tset}, Tmax:{Tmax}")
-
+        alpha = min(alpha, 0.99)
+        alpha = max(alpha, 0)
         print("Getting external temperatures")
         external_temperatures = get_temperature_values()
         room_temperatures = grad_descent(alpha, external_temperatures, Tmin, Tset, Tmax).tolist()
+        step_size = 4
 
         def async_select_alpha():
-            # update the thingsSpeak dashboard every 15 minutes
-            for current_temperature in room_temperatures:
+            for i in range(0, len(room_temperatures), step_size):
+                current_temperature = room_temperatures[i]
                 thingspeak_api_url = f"https://api.thingspeak.com/update?api_key={thingspeak.api_key}&field3={Tmax}&field4={Tmin}&field5={Tset}&field6={current_temperature}"
-                thingspeak.request(thingspeak_api_url)
-                print(f"Updated thingspeak dashboard - Tmin:{Tmin}, Tset:{Tset}, Tmax:{Tmax}, Tcur:{current_temperature}")
+                response = thingspeak.request(thingspeak_api_url)
+                print(f"Updated thingspeak dashboard - Tmin:{Tmin}, Tset:{Tset}, Tmax:{Tmax}, Tcur:{current_temperature}, response = {response}")
                 sleep(thingspeak.sleep_time)
-
+        update_time = f"{thingspeak.sleep_time} seconds" if thingspeak.sleep_time <= 60 else f"{thingspeak.sleep_time/60} minutes"
+        print(f"updating thingsSpeak dashboard every {update_time} minutes, step size: {step_size}")
         threading.Thread(target=async_select_alpha).start()
         return {
             'status': 200,

@@ -7,5 +7,6 @@ from weather.temperature import get_temperature_values
 load_dotenv()
 
 temp = get_temperature_values()
+print(temp)
 test_pso()
 test_adam()
