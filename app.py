@@ -60,9 +60,10 @@ def createApp(testing: bool = True):
             if not response:
                 raise (Exception('Empty Body'))
             alpha = response['alpha']
-            Tmin = int(response['tmin'])
             Tset = int(response['tset'])
+            Tmin = int(response['tmin'])
             Tmax = int(response['tmax'])
+            manual_mode = bool(response.get('manual_mode', False))
         except Exception as e:
             print(f"Exception in select alpha -> {e}")
             abort(400, f'{e} Key missing')
@@ -77,9 +78,12 @@ def createApp(testing: bool = True):
         def async_select_alpha():
             for i in range(0, len(room_temperatures), step_size):
                 current_temperature = room_temperatures[i]
-                thingspeak_api_url = f"https://api.thingspeak.com/update?api_key={thingspeak.api_key}&field3={Tmax}&field4={Tmin}&field5={Tset}&field6={current_temperature}"
+                if manual_mode:
+                    thingspeak_api_url = f"https://api.thingspeak.com/update?api_key={thingspeak.api_key}&field3={Tmax}&field4={Tmin}&field5={Tset}&field6={Tset}"
+                else:
+                    thingspeak_api_url = f"https://api.thingspeak.com/update?api_key={thingspeak.api_key}&field3={Tmax}&field4={Tmin}&field5={Tset}&field6={current_temperature}"
                 response = thingspeak.request(thingspeak_api_url)
-                print(f"Updated thingspeak dashboard - Tmin:{Tmin}, Tset:{Tset}, Tmax:{Tmax}, Tcur:{current_temperature}, response = {response}")
+                print(f"Updated thingspeak dashboard - Tmin:{Tmin}, Tset:{Tset}, Tmax:{Tmax}, Tcur:{current_temperature if not manual_mode else Tset}, response = {response}")
                 sleep(thingspeak.sleep_time)
         update_time = f"{thingspeak.sleep_time} seconds" if thingspeak.sleep_time <= 60 else f"{thingspeak.sleep_time/60} minutes"
         print(f"updating thingsSpeak dashboard every {update_time} minutes, step size: {step_size}")
