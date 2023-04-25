@@ -1,10 +1,13 @@
+import os
 from time import sleep
 import numpy as np
-from flask import Flask, request, abort, jsonify
+from flask import Flask, request, abort, send_file
 from flask_cors import CORS
 import threading
+import uuid
 
 from dotenv import load_dotenv
+from utility.plot import plot_temp_vs_time
 load_dotenv()
 
 import utility.thingspeak as thingspeak
@@ -28,13 +31,22 @@ def createApp(testing: bool = True):
         print("Getting external temperatures")
         external_temperatures = get_temperature_values()
         adam_output = list()
-        for alpha in alphas:
+        plot_id = uuid.uuid1()
+        plot_base_path = os.path.join("plots", str(plot_id))
+        while os.path.exists(plot_base_path):
+            plot_id = uuid.uuid1()
+            plot_base_path = os.path.join("plots", str(plot_id))
+        os.makedirs(plot_base_path)
+        for index, alpha in enumerate(alphas):
             room_temperatures = grad_descent(alpha, external_temperatures, Tmin, Tset, Tmax).tolist()
+            plot_path = os.path.join(plot_base_path, f"{index}.png")
+            plot_temp_vs_time(external_temperatures, room_temperatures, plot_path)
             overall_price = overall_price_function(grid_prices, room_temperatures, external_temperatures)
             adam_output.append({
                 'alpha': alpha,
                 'room_temperatures': room_temperatures,
-                'overall_price': overall_price
+                'overall_price': overall_price,
+                'plot_location': plot_path
             })
         return {
             'external_temperatures': external_temperatures,
@@ -78,6 +90,11 @@ def createApp(testing: bool = True):
             'external_temperatures': external_temperatures,
             'room_temperatures': room_temperatures
         }
+
+    @app.route('/<path:path>')
+    def serve_images(path):
+        print(f'Image request : {path}')
+        return send_file(path)
 
     return app
 
