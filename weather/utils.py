@@ -17,10 +17,10 @@ def get_latiture_longitude(city: str) -> tuple[float, float]:
 def get_weather_values(city: str) -> list:
     api_key_pirate = os.environ.get('API_KEY_PIRATE')
     lat, lon = get_latiture_longitude(city)
-    url = f"https://api.pirateweather.net/forecast/{api_key_pirate}/{lat},{lon}?extend=hourly&exclude=minutely,daily,currently,alerts&units=si"
+    url = f"https://api.pirateweather.net/forecast/{api_key_pirate}/{lat},{lon}?exclude=minutely,daily,currently,alerts&units=si"
     response = requests.get(url)
     response = response.json()
-    ans = [resp for resp in response['hourly']['data'][:96]]
+    ans = [resp for resp in response['hourly']['data'][:25]]
     for cur in ans:
         cur['time'] = unix_time_to_datetime(cur['time'])
     return ans

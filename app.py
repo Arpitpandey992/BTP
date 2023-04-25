@@ -26,7 +26,7 @@ def createApp(testing: bool = True):
     # Routes
     @app.route('/adam', methods=['GET'])
     def apply_adam():
-        Tmin, Tset, Tmax = int(request.args.get('tmin')), int(request.args.get('tset')), int(request.args.get('tmax'))  # type: ignore
+        Tmin, Tset, Tmax = float(request.args.get('tmin')), float(request.args.get('tset')), float(request.args.get('tmax'))  # type: ignore
         print(f"GET apply_adam - Tmin:{Tmin}, Tset:{Tset}, Tmax:{Tmax}")
         print("Getting external temperatures")
         external_temperatures = get_temperature_values()
@@ -60,9 +60,9 @@ def createApp(testing: bool = True):
             if not response:
                 raise (Exception('Empty Body'))
             alpha = response['alpha']
-            Tset = int(response['tset'])
-            Tmin = int(response['tmin'])
-            Tmax = int(response['tmax'])
+            Tset = float(response['tset'])
+            Tmin = float(response['tmin'])
+            Tmax = float(response['tmax'])
             manual_mode = bool(response.get('manual_mode', False))
         except Exception as e:
             print(f"Exception in select alpha -> {e}")
@@ -86,7 +86,7 @@ def createApp(testing: bool = True):
                 print(f"Updated thingspeak dashboard - Tmin:{Tmin}, Tset:{Tset}, Tmax:{Tmax}, Tcur:{current_temperature if not manual_mode else Tset}, response = {response}")
                 sleep(thingspeak.sleep_time)
         update_time = f"{thingspeak.sleep_time} seconds" if thingspeak.sleep_time <= 60 else f"{thingspeak.sleep_time/60} minutes"
-        print(f"updating thingsSpeak dashboard every {update_time} minutes, step size: {step_size}")
+        print(f"updating thingsSpeak dashboard every {update_time}, step size: {step_size}")
         threading.Thread(target=async_select_alpha).start()
         return {
             'status': 200,
