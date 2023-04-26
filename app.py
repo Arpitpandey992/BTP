@@ -73,10 +73,11 @@ def createApp(testing: bool = True):
         print("Getting external temperatures")
         external_temperatures = get_temperature_values()
         room_temperatures = grad_descent(alpha, external_temperatures, Tmin, Tset, Tmax).tolist()
-        step_size = 4
+        step_size = 8
 
         def async_select_alpha():
-            for i in range(0, len(room_temperatures), step_size):
+            loop_range = 1 if manual_mode else len(room_temperatures)
+            for i in range(0, loop_range, step_size):
                 current_temperature = room_temperatures[i]
                 if manual_mode:
                     thingspeak_api_url = f"https://api.thingspeak.com/update?api_key={thingspeak.api_key}&field3={Tmax}&field4={Tmin}&field5={Tset}&field6={Tset}"
@@ -85,6 +86,7 @@ def createApp(testing: bool = True):
                 response = thingspeak.request(thingspeak_api_url)
                 print(f"Updated thingspeak dashboard - Tmin:{Tmin}, Tset:{Tset}, Tmax:{Tmax}, Tcur:{current_temperature if not manual_mode else Tset}, response = {response}")
                 sleep(thingspeak.sleep_time)
+            print('Done')
         update_time = f"{thingspeak.sleep_time} seconds" if thingspeak.sleep_time <= 60 else f"{thingspeak.sleep_time/60} minutes"
         print(f"updating thingsSpeak dashboard every {update_time}, step size: {step_size}")
         threading.Thread(target=async_select_alpha).start()
