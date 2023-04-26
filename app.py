@@ -17,6 +17,9 @@ from utility.cost_utils import overall_price_function
 from weather.temperature import get_temperature_values
 
 
+thread_number = 1
+
+
 def createApp(testing: bool = True):
     app = Flask(__name__)
     CORS(app)
@@ -76,8 +79,14 @@ def createApp(testing: bool = True):
         step_size = 8
 
         def async_select_alpha():
+            global thread_number
+            current_thread_number = thread_number + 1
+            thread_number = current_thread_number
             loop_range = 1 if manual_mode else len(room_temperatures)
             for i in range(0, loop_range, step_size):
+                if thread_number != current_thread_number:
+                    print(f"thread with id = {current_thread_number} killed")
+                    return
                 current_temperature = room_temperatures[i]
                 if manual_mode:
                     thingspeak_api_url = f"https://api.thingspeak.com/update?api_key={thingspeak.api_key}&field3={Tmax}&field4={Tmin}&field5={Tset}&field6={Tset}"
